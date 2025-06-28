@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sushi Shop SPA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.js"></script>
+    <style>
+        /* Общие стили */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f8f8f8;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Стили шапки */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav li {
+            margin-left: 20px;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+        
+        nav a:hover, nav a.active {
+            color: #e74c3c;
+        }
+        
+        .cart-icon {
+            position: relative;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        /* Стили секций */
+        .section {
+            padding: 60px 0;
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://via.placeholder.com/1920x600');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-align: center;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 100px 20px;
+        }
+        
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 36px;
+            color: #333;
+        }
+        
+        /* Стили меню */
+        .categories {
+            margin-bottom: 30px;
+        }
+        
+        .category-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        
+        .category-btn {
+            padding: 8px 20px;
+            margin: 5px;
+            background: #eee;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .category-btn.active {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .menu-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .menu-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .item-info {
+            padding: 20px;
+        }
+        
+        .item-name {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .item-desc {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .item-price {
+            font-weight: bold;
+            font-size: 18px;
+            color: #e74c3c;
+        }
+        
+        .add-to-cart {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .add-to-cart:hover {
+            background: #c0392b;
+        }
+        
+        /* Стили корзины */
+        .cart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .cart-items {
+            margin-bottom: 30px;
+        }
+        
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .item-controls {
+            display: flex;
+            align-items: center;
+        }
+        
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            background: #eee;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .quantity {
+            margin: 0 10px;
+        }
+        
+        .remove-btn {
+            margin-left: 15px;
+            color: #e74c3c;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 20px 0;
+        }
+        
+        .checkout-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+        }
+        
+        /* Стили формы контактов */
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        /* Стили футера */
+        footer {
+            background: #333;
+            color: white;
+            padding: 40px 0 20px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 20px;
+        }
+        
+        .footer-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #e74c3c;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin-right: 15px;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+            font-size: 14px;
+        }
+        
+        /* Мобильная адаптация */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+            }
+            
+            nav ul {
+                margin-top: 15px;
+            }
+            
+            nav li {
+                margin: 0 10px;
+            }
+            
+            .hero h1 {
+                font-size: 36px;
+            }
+            
+            .hero p {
+                font-size: 18px;
+            }
+            
+            .section {
+                padding: 40px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Шапка -->
+        <header>
+            <div class="container header-container">
+                <div class="logo">Sushi Shop</div>
+                <nav>
+                    <ul>
+                        <li><a href="#" data-bind="click: showHome, css: { active: currentPage() === 'home' }">Главная</a></li>
+                        <li><a href="#" data-bind="click: showMenu, css: { active: currentPage() === 'menu' }">Меню</a></li>
+                        <li><a href="#" data-bind="click: showAbout, css: { active: currentPage() === 'about' }">О нас</a></li>
+                        <li><a href="#" data-bind="click: showContact, css: { active: currentPage() === 'contact' }">Контакты</a></li>
+                        <li>
+                            <a href="#" class="cart-icon" data-bind="click: showCart, css: { active: currentPage() === 'cart' }">
+                                Корзина
+                                <!-- ko if: cart().length > 0 -->
+                                <span class="cart-count" data-bind="text: cart().reduce((sum, item) => sum + item.quantity(), 0)"></span>
+                                <!-- /ko -->
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Главная страница -->
+        <section id="home" class="section hero" data-bind="css: { active: currentPage() === 'home' }">
+            <div class="hero-content">
+                <h1>Добро пожаловать в наш магазин суши!</h1>
+                <p>Свежие и вкусные суши, доставленные к вашему столу.</p>
+                <a href="#" class="btn" data-bind="click: showMenu">Заказать сейчас</a>
+            </div>
+        </section>
+
+        <!-- Секция меню -->
+        <section id="menu" class="section" data-bind="css: { active: currentPage() === 'menu' }">
+            <div class="container">
+                <h2 class="section-title">Наше меню</h2>
+                <div class="categories">
+                    <div class="category-buttons">
+                        <!-- ko foreach: categories -->
+                        <button class="category-btn" data-bind="text: name, click: $parent.filterByCategory, css: { active: $parent.selectedCategory() === $data }"></button>
+                        <!-- /ko -->
+                    </div>
+                </div>
+                
+                <div class="menu-grid">
+                    <!-- ko foreach: filteredItems -->
+                    <div class="menu-item">
+                        <img data-bind="attr: { src: image }" alt="Суши">
+                        <div class="item-info">
+                            <h3 class="item-name" data-bind="text: name"></h3>
+                            <p class="item-desc" data-bind="text: description"></p>
+                            <div class="item-footer">
+                                <div class="item-price" data-bind="text: price + ' ₽'"></div>
+                                <button class="add-to-cart" data-bind="click: $parent.addToCart">В корзину</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /ko -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция "О нас" -->
+        <section id="about" class="section" data-bind="css: { active: currentPage() === 'about' }">
+            <div class="container">
+                <h2 class="section-title">О нас</h2>
+                <div class="about-content" style="text-align: center; max-width: 800px; margin: 0 auto;">
+                    <p style="font-size: 18px; line-height: 1.6;">
+                        Мы предлагаем только свежие ингредиенты и высокое качество. Наши повара с многолетним опытом 
+                        готовят каждое блюдо с любовью и вниманием к деталям. Мы используем традиционные японские 
+                        рецепты и современные технологии, чтобы порадовать вас настоящим вкусом Японии.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция контактов -->
+        <section id="contact" class="section" data-bind="css: { active: currentPage() === 'contact' }">
+            <div class="container">
+                <h2 class="section-title">Связаться с нами</h2>
+                <div class="contact-form">
+                    <div class="form-group">
+                        <label for="name">Имя</label>
+                        <input type="text" id="name" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Сообщение</label>
+                        <textarea id="message" class="form-control"></textarea>
+                    </div>
+                    <button type="submit" class="btn">Отправить</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция корзины -->
+        <section id="cart" class="section" data-bind="css: { active: currentPage() === 'cart' }">
+            <div class="container">
+                <h2 class="section-title">Корзина</h2>
+                <div class="cart-container">
+                    <!-- ko if: cart().length > 0 -->
+                    <div class="cart-items">
+                        <!-- ko foreach: cart -->
+                        <div class="cart-item">
+                            <div class="item-name">
+                                <h3 data-bind="text: name"></h3>
+                                <div data-bind="text: price + ' ₽ за шт.'"></div>
+                            </div>
+                            <div class="item-controls">
+                                <button class="quantity-btn" data-bind="click: decreaseQuantity">-</button>
+                                <span class="quantity" data-bind="text: quantity"></span>
+                                <button class="quantity-btn" data-bind="click: increaseQuantity">+</button>
+                                <button class="remove-btn" data-bind="click: $parent.removeFromCart">Удалить</button>
+                            </div>
+                            <div class="item-price" data-bind="text: (price * quantity()) + ' ₽'"></div>
+                        </div>
+                        <!-- /ko -->
+                    </div>
+                    <div class="cart-total">
+                        <span>Итого:</span>
+                        <span data-bind="text: totalPrice() + ' ₽'"></span>
+                    </div>
+                    <button class="btn checkout-btn">Оформить заказ</button>
+                    <!-- /ko -->
+                    
+                    <!-- ko if: cart().length === 0 -->
+                    <div style="text-align: center; padding: 40px;">
+                        <h3>Ваша корзина пуста</h3>
+                        <p>Добавьте товары из меню</p>
+                        <button class="btn" data-bind="click: showMenu">Перейти в меню</button>
+                    </div>
+                    <!-- /ko -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Футер -->
+        <footer>
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h3 class="footer-title">Sushi Shop</h3>
+                        <p>Свежие и вкусные суши с доставкой</p>
+                    </div>
+                    <div class="footer-section">
+                        <h3 class="footer-title">Контакты</h3>
+                        <p>г. Москва, ул. Сушильная, 15</p>
+                        <p>Телефон: +7 (999) 123-45-67</p>
+                    </div>
+                    <div class="footer-section">
+                        <h3 class="footer-title">Соцсети</h3>
+                        <div class="social-links">
+                            <a href="#">Facebook</a>
+                            <a href="#">Instagram</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="copyright">
+                    © 2025 Sushi Shop. Все права защищены.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function AppViewModel() {
+            const self = this;
+            
+            // Навигация
+            self.currentPage = ko.observable('home');
+            
+            self.showHome = function() {
+                self.currentPage('home');
+            };
+            
+            self.showMenu = function() {
+                self.currentPage('menu');
+            };
+            
+            self.showAbout = function() {
+                self.currentPage('about');
+            };
+            
+            self.showContact = function() {
+                self.currentPage('contact');
+            };
+            
+            self.showCart = function() {
+                self.currentPage('cart');
+            };
+            
+            // Данные меню
+            self.categories = ko.observableArray([
+                {
+                    name: "Суши",
+                    items: [
+                        { 
+                            name: "Калифорния", 
+                            description: "Суши с крабом и авокадо.", 
+                            price: 300, 
+                            image: "https://via.placeholder.com/300x200?text=Калифорния" 
+                        },
+                        { 
+                            name: "Филадельфия", 
+                            description: "Суши с лососем и сливочным сыром.", 
+                            price: 350, 
+                            image: "https://via.placeholder.com/300x200?text=Филадельфия" 
+                        }
+                    ]
+                },
+                {
+                    name: "Роллы",
+                    items: [
+                        { 
+                            name: "Дракон", 
+                            description: "Ролл с угрем и авокадо.", 
+                            price: 400, 
+                            image: "https://via.placeholder.com/300x200?text=Дракон" 
+                        },
+                        { 
+                            name: "Спайси", 
+                            description: "Ролл с острым тунцом.", 
+                            price: 380, 
+                            image: "https://via.placeholder.com/300x200?text=Спайси" 
+                        }
+                    ]
+                }
+            ]);
+            
+            self.selectedCategory = ko.observable(null);
+            self.filteredItems = ko.computed(() => {
+                if (!self.selectedCategory()) {
+                    return self.categories().flatMap(category => category.items);
+                }
+                return self.selectedCategory().items;
+            });
+            
+            self.filterByCategory = function(category) {
+                self.selectedCategory(category);
+            };
+            
+            // Корзина
+            self.cart = ko.observableArray([]);
+            
+            self.addToCart = function(item) {
+                const existingItem = self.cart().find(cartItem => cartItem.name === item.name);
+                
+                if (existingItem) {
+                    existingItem.quantity(existingItem.quantity() + 1);
+                } else {
+                    self.cart.push({
+                        name: item.name,
+                        price: item.price,
+                        quantity: ko.observable(1),
+                        increaseQuantity: function() {
+                            this.quantity(this.quantity() + 1);
+                        },
+                        decreaseQuantity: function() {
+                            if (this.quantity() > 1) {
+                                this.quantity(this.quantity() - 1);
+                            }
+                        }
+                    });
+                }
+            };
+            
+            self.removeFromCart = function(item) {
+                self.cart.remove(item);
+            };
+            
+            self.totalPrice = ko.computed(() => {
+                return self.cart().reduce((total, item) => {
+                    return total + (item.price * item.quantity());
+                }, 0);
+            });
+        }
+        
+        // Активация Knockout
+        ko.applyBindings(new AppViewModel());
+    </script>
+</body>
+</html>
